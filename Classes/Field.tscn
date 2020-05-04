@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Classes/Collumn.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Field.gd" type="Script" id=2]
+
+[node name="Field" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="Column" parent="." instance=ExtResource( 1 )]
+position = Vector2( 0, 16 )
+
+[node name="Column2" parent="." instance=ExtResource( 1 )]
+position = Vector2( 128, 16 )
+
+[node name="Column3" parent="." instance=ExtResource( 1 )]
+position = Vector2( 256, 16 )
+
+[node name="Column4" parent="." instance=ExtResource( 1 )]
+position = Vector2( 384, 16 )
+
+[node name="Column5" parent="." instance=ExtResource( 1 )]
+position = Vector2( 512, 16 )
+
+[node name="Column6" parent="." instance=ExtResource( 1 )]
+position = Vector2( 640, 16 )

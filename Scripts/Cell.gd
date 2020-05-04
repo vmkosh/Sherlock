@@ -27,13 +27,14 @@ func _ready():
 		var s = tile.instance()		
 		s.position = Vector2((i % 3) * 32 , (i / 3) * 32)
 		s.init(load("res://Tiles/%s/icon%d.png" % [row, i]), col, row, i)
-		add_child(s)
 		s.savePosition()
 		tiles.push_back (s)
 		s.scale = Vector2(0.5,0.5)
+		add_child(s)
 		
 
 func _on_Tile_selected(param_col, param_row, param_num):
+	print("qe")
 	if param_col == col && param_row == row:
 		for tile in tiles:
 			tile.hide()

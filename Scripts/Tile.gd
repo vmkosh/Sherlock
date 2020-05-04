@@ -45,8 +45,8 @@ func _process(delta):
 	elif dragging :
 		emit_signal("dropped", row, num)
 		position = initialPosition
-		dragging = false		
-		Global.dragged = null
+		dragging = false
+		#Global.dragged = null
 	else:
 		dragging = false
 

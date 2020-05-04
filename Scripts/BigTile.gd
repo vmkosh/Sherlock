@@ -26,9 +26,10 @@ func _process(delta):
 	if mouse_in && Input.is_action_just_released("left_click"):
 		if Global.dragged != null && "num" in Global.dragged:
 			var dragged = Global.dragged
-			if col == dragged.col && row == dragged.row:
+			if row == dragged.row:
 				texture = load("res://Tiles/%s/icon%d.png" % [row, dragged.num])
 				emit_signal("tileSelected", col, row, dragged.num)
+				Global.dragged = null
 
 
 func _on_Area2D_mouse_entered():

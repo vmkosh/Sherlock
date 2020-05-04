@@ -19,7 +19,6 @@ func _init(param_col, param_row, x, y):
 	position.y = y
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	print(\"in ready %s %s %s\" % [col, row, position])
 	for i in range(0,6):
 		print(i)
 		var s = tile.instance()

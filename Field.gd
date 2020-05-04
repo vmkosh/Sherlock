@@ -1,19 +1,19 @@
-extends Area2D
+extends Node2D
 
 
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
-var Cell = preload("res://Scripts/Cell.gd")
-var col;
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	var i = 0
-	for row in Global.ROW:
-		var cell = Cell.new(col, row, 16, 0 + (i * 64))
-		i += 1
-		add_child(cell)
+	$Column.col = 1
+	$Column2.col = 2
+	$Column3.col = 3
+	$Column4.col = 4
+	$Column5.col = 5
+	$Column6.col = 6
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
