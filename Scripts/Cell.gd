@@ -7,6 +7,7 @@ extends Area2D
 var col = null
 var row = null
 var tile = preload("res://Classes/Tile.tscn")
+var bigCell = preload("res://Classes/BigTile.tscn")
 var tiles = Array()
 
 func _init(param_col, param_row, x, y):
@@ -16,19 +17,27 @@ func _init(param_col, param_row, x, y):
 	position.y = y
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	var bc = bigCell.instance()
+	bc.connect("tileSelected", self, "_on_Tile_selected")
+	bc.init(col, row)
+	bc.position.x = 32
+	bc.position.y = 16
+	add_child(bc)
 	for i in range(0,6):
-		print(i)
-		var s = tile.instance()
-		
+		var s = tile.instance()		
 		s.position = Vector2((i % 3) * 32 , (i / 3) * 32)
 		s.init(load("res://Tiles/%s/icon%d.png" % [row, i]), col, row, i)
 		add_child(s)
 		s.savePosition()
 		tiles.push_back (s)
 		s.scale = Vector2(0.5,0.5)
-		print(s.position)
 		
 
+func _on_Tile_selected(param_col, param_row, param_num):
+	if param_col == col && param_row == row:
+		for tile in tiles:
+			tile.hide()
+	
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):

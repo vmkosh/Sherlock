@@ -14,22 +14,20 @@ signal tileSelected(col, row, num)
 func _init():
 	pass
 	
-func init(sprite, param_col, param_row):
-	texture = sprite
-	row = param_row
+func init(param_col, param_row):
 	col = param_col
+	row = param_row
 	
-	
-
 # Called when the node enters the scene tree for the first time.
 func _ready():	
 	pass
 	
 func _process(delta):	
 	if mouse_in && Input.is_action_just_released("left_click"):
-		if "num" in Global.dragged:
+		if Global.dragged != null && "num" in Global.dragged:
 			var dragged = Global.dragged
 			if col == dragged.col && row == dragged.row:
+				texture = load("res://Tiles/%s/icon%d.png" % [row, dragged.num])
 				emit_signal("tileSelected", col, row, dragged.num)
 
 

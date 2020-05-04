@@ -19,8 +19,6 @@ func _init():
 	pass
 func savePosition():
 	initialPosition = position
-	print("initial when saved: %s" %initialPosition)	
-	print("position when saved: %s" %position)	
 
 func init(sprite, param_col, param_row, param_num):
 	texture = sprite
@@ -32,8 +30,7 @@ func init(sprite, param_col, param_row, param_num):
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	initialPosition = position	
-	print("initial when ready: %s" %initialPosition)
+	initialPosition = position
 
 func _process(delta):
 	if mouse_in && Input.is_action_pressed("right_click"):
@@ -45,7 +42,6 @@ func _process(delta):
 		Global.dragged = self
 	if dragging && Input.is_action_pressed("left_click"):
 		position = initialPosition - current + get_viewport().get_mouse_position()
-		print(position)
 	elif dragging :
 		emit_signal("dropped", row, num)
 		position = initialPosition
