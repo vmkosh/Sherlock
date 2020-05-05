@@ -34,19 +34,23 @@ func _ready():
 
 func _process(delta):
 	if mouse_in && Input.is_action_pressed("right_click"):
-		visible = false		
+		visible = false
 		emit_signal("hidden", col, row, num)
-	if mouse_in && Input.is_action_pressed("left_click") && Global.dragged == null:
+	if mouse_in && Input.is_action_pressed("left_click") && GL.dragged == null:
+		scale = Vector2(1,1)
+		z_index = 1
 		dragging = true
 		current = get_viewport().get_mouse_position()
-		Global.dragged = self
+		GL.dragged = self
 	if dragging && Input.is_action_pressed("left_click"):
 		position = initialPosition - current + get_viewport().get_mouse_position()
 	elif dragging :
-		emit_signal("dropped", row, num)
+		scale = Vector2(0.5,0.5)
+		z_index = 0
 		position = initialPosition
 		dragging = false
-		#Global.dragged = null
+		GL.dragged = null
+		EB.publish("tileDropped_%s" % row, {"num": num})
 	else:
 		dragging = false
 

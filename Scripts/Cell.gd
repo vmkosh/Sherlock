@@ -18,13 +18,14 @@ func _init(param_col, param_row, x, y):
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	var bc = bigCell.instance()
-	bc.connect("tileSelected", self, "_on_Tile_selected")
+	EB.subscribe("tileSelected_%s" % row, self, "_on_Tile_selected")
 	bc.init(col, row)
 	bc.position.x = 32
 	bc.position.y = 16
 	add_child(bc)
 	for i in range(0,6):
-		var s = tile.instance()		
+		var s = tile.instance()
+# warning-ignore:integer_division
 		s.position = Vector2((i % 3) * 32 , (i / 3) * 32)
 		s.init(load("res://Tiles/%s/icon%d.png" % [row, i]), col, row, i)
 		s.savePosition()
@@ -33,11 +34,12 @@ func _ready():
 		add_child(s)
 		
 
-func _on_Tile_selected(param_col, param_row, param_num):
-	print("qe")
-	if param_col == col && param_row == row:
+func _on_Tile_selected(data):
+	if data["col"] == col:
 		for tile in tiles:
 			tile.hide()
+	else:
+		tiles[data["num"]].hide()
 	
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.

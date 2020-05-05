@@ -5,14 +5,16 @@ extends Area2D
 # var a = 2
 # var b = "text"
 var Cell = preload("res://Scripts/Cell.gd")
-var col;
+var rows = Array()
+export var col = 0;
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	var i = 0
-	for row in Global.ROW:
+	for row in GL.ROW:
 		var cell = Cell.new(col, row, 16, 0 + (i * 64))
 		i += 1
+		rows.push_back(cell)
 		add_child(cell)
 
 

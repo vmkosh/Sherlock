@@ -8,18 +8,24 @@ script = ExtResource( 2 )
 
 [node name="Column" parent="." instance=ExtResource( 1 )]
 position = Vector2( 0, 16 )
+col = 1
 
 [node name="Column2" parent="." instance=ExtResource( 1 )]
 position = Vector2( 128, 16 )
+col = 2
 
 [node name="Column3" parent="." instance=ExtResource( 1 )]
 position = Vector2( 256, 16 )
+col = 3
 
 [node name="Column4" parent="." instance=ExtResource( 1 )]
 position = Vector2( 384, 16 )
+col = 4
 
 [node name="Column5" parent="." instance=ExtResource( 1 )]
 position = Vector2( 512, 16 )
+col = 5
 
 [node name="Column6" parent="." instance=ExtResource( 1 )]
 position = Vector2( 640, 16 )
+col = 6

@@ -23,14 +23,13 @@ func _ready():
 	pass
 	
 func _process(delta):	
-	if mouse_in && Input.is_action_just_released("left_click"):
-		if Global.dragged != null && "num" in Global.dragged:
-			var dragged = Global.dragged
-			if row == dragged.row:
-				texture = load("res://Tiles/%s/icon%d.png" % [row, dragged.num])
-				emit_signal("tileSelected", col, row, dragged.num)
-				Global.dragged = null
+	EB.subscribe("tileDropped_%s" % row, self, "_handle_event")
 
+func _handle_event(data):
+	if mouse_in:
+		print("got %s" % self)
+		texture = load("res://Tiles/%s/icon%d.png" % [row, data["num"]])
+		EB.publish("tileSelected_%s" % row, {"col": col, "num": data["num"]})
 
 func _on_Area2D_mouse_entered():
 	mouse_in = true
