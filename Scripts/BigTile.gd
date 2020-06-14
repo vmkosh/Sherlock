@@ -27,7 +27,7 @@ func _process(delta):
 
 func _handle_event(data):
 	if mouse_in:
-		print("got %s" % self)
+		print("got %s %s" % [row, data["num"]])
 		texture = load("res://Tiles/%s/icon%d.png" % [row, data["num"]])
 		EB.publish("tileSelected_%s" % row, {"col": col, "num": data["num"]})
 

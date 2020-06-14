@@ -28,6 +28,7 @@ config/icon="res://icon.png"
 
 EB="*res://addons/godot-event-bus-master/plugin/event_bus.gd"
 GL="*res://Global/Global.gd"
+Logic="*res://Global/Logic.gd"
 
 [display]
 

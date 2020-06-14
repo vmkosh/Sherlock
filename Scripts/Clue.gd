@@ -1,12 +1,14 @@
-extends Node
+extends Object
 
 
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
-enum ROW {HEAD, ARM, TORSO, LOWER, JOINT, LEG}
-enum CLUETYPE {COLUMN, NEAR, BETWEEN, TOLEFT, NOTCOL, NOTNEAR, NOTBETWEEN, SELECTED}
-var dragged = null
+var tile1
+var tile2
+var tile3
+var type
+var isUsed = true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -15,3 +17,4 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
+#	pass
