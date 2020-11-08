@@ -5,6 +5,7 @@ extends Sprite
 # var b = "text"
 var row
 var col
+var enabled = true
 
 var mouse_in = false
 
@@ -26,8 +27,9 @@ func _process(delta):
 	EB.subscribe("tileDropped_%s" % row, self, "_handle_event")
 
 func _handle_event(data):
-	if mouse_in:
-		print("got %s %s" % [row, data["num"]])
+	if enabled && mouse_in:
+		#print("got %s %s" % [row, data["num"]])
+		enabled = false
 		texture = load("res://Tiles/%s/icon%d.png" % [row, data["num"]])
 		EB.publish("tileSelected_%s" % row, {"col": col, "num": data["num"]})
 

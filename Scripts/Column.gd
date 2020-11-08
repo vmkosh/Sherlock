@@ -4,7 +4,7 @@ extends Area2D
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
-var Cell = preload("res://Scripts/Cell.gd")
+const Cell = preload("res://Scripts/Cell.gd")
 var rows = Array()
 export var col = 0;
 

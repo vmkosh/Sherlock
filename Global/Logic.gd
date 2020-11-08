@@ -4,64 +4,289 @@ extends Node
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
-var Cell = preload("res://Scripts/Cell.gd")
-var Clue = preload("res://Scripts/Clue.gd")
+const Clue = preload("res://Scripts/Clue.gd")
 var selected = []
 var field = []
 var solution = []
 const tiles = ["1", "2", "3", "4", "5", "6"]
 const rows = ["A", "B", "C", "D", "E", "F"]
 var ingame = []
+var solved = []
 var rng = RandomNumberGenerator.new()
 
 var clues = {}
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	seed("TestLevel".hash())
+	_createSolution()
+	_createField()
+	_createClues()
+	var checksolved = true
+	for col in range(6):
+		for row in range(6):
+			if (solution[col][row] != selected[col][row]): solved = false
+	for type in clues:
+		print("Generated %s clues with type %s" % [clues[type].size(), type])
+	_reduceClues()
+	for type in clues:
+		print("Reduced to %s clues with type %s" % [clues[type].size(), type])	
+
+func _createField():
+	field = []
+	selected = []
+	solved = []
+	ingame = []
 	for col in range(6):
 		field.append([])
-		for row in range(6):
-			field[col].append(_rowTiles(row))			
-	createLvl()
-
-func createLvl():
-	for col in range(6):
-		solution.append([])
 		selected.append([])
+		for row in range(6):
+			field[col].append(_rowTiles(row))
+			selected[col].append(null)
+			ingame.append(solution[col][row])
+
+func _createSolution():
+	for _i in range(6):
+		solution.append([])
 	for row in range(6):
 		var ans = _rowTiles(row)
 		ans.shuffle()
 		for col in range(6):
 			solution[col].append(ans[col])
-			ingame.append(ans[col])
-			selected[col].append(null)
-	#print(_findInSolution("B6"))
-	#print(solution[1])
-	_createClues()
-	_trySolve()
+
 
 func _createClues():
 	for type in GL.CLUETYPE.values():
 		clues[type] = []
-	print(clues)	
+	while !_isSolved():		
+		_trySolve()
+		_createClue()
+	
 	
 
-func _trySolve():
-	var changed = true
-	while (changed == true):
-		changed = false
-		if (_checkLast() == true): changed = true
-		if (_checkOnly() == true): changed = true
-		if (_checkClues() == true): changed = true
-	if (_isSolved()): return
-	_createClue()
-	#_trySolve()
+func _reduceClues():
+	for type in GL.CLUETYPE.values():
+		for clue in clues[type]:
+			_enableClues()
+			clue.enabled = false
+			_createField()
+			_trySolve()
+			if (_isSolved()): clue.toDel = true
+	for type in GL.CLUETYPE.values():
+		for clue in range(clues[type].size() - 1, -1, -1):
+			if (clues[type][clue].toDel): clues[type].remove(clue)
+			
+
+func _enableClues():
+	for type in GL.CLUETYPE.values():
+		for clue in clues[type]:
+			if (!clue.toDel): clue.enabled = true
+
+func _trySolve():	
+		var changed = true
+		while (changed == true):
+			changed = false
+			if (_checkLast()):
+				changed = true
+			if (_checkOnly()):
+				changed = true
+			if (_checkClues()): changed = true		
 	
 func _checkClues():
-	print("check clues")
-	return false
+	var changed = false
+	for clue in clues[GL.CLUETYPE.COLUMN]:
+		if !clue.enabled: continue
+		if (_checkClueCol(clue)): changed = true
+	for clue in clues[GL.CLUETYPE.NEAR]:
+		if !clue.enabled: continue
+		if (_checkClueNear(clue)): changed = true
+	for clue in clues[GL.CLUETYPE.BETWEEN]:
+		if !clue.enabled: continue
+		if (_checkClueBetween(clue)): changed = true
+	for clue in clues[GL.CLUETYPE.TOLEFT]:
+		if !clue.enabled: continue
+		if (_checkClueToLeft(clue)): changed = true
+	for clue in clues[GL.CLUETYPE.NOTNEAR]:
+		if !clue.enabled: continue
+		if (_checkClueNotNear(clue)): changed = true
+	for clue in clues[GL.CLUETYPE.NOTCOL]:
+		if !clue.enabled: continue
+		if (_checkClueNotCol(clue)): changed = true
+	for clue in clues[GL.CLUETYPE.NOTBETWEEN]:
+		if !clue.enabled: continue
+		if (_checkClueNotBetween(clue)): changed = true
+	for clue in clues[GL.CLUETYPE.SELECTED]:
+		if !clue.enabled: continue
+		var pos = _findInSolution(clue.tile1)
+		_selectTile(pos[0], pos[1], clue.tile1)
+		changed = true
+		clue.enabled = false
+	return changed
+
+func _checkClueNotBetween(clue:Clue):
+	var changed = false
+	if (clue.tile1 in solved) && (clue.tile3 in solved):
+		clue.enabled = false
+		var pos1 = _findInSolution(clue.tile1)
+		var pos2 = _findInSolution(clue.tile3)
+		if (_removeFromField((pos1[0] + pos2[0]) / 2, clue.tile2)): changed = true
+		return changed
+	if (clue.tile2 in solved):
+		var pos = _findInSolution(clue.tile2)
+		var col = pos[0]
+		if (!_tilePresent(col + 3, clue.tile3)):
+			if (_removeFromField(col + 1, clue.tile1)): changed = true
+		if (!_tilePresent(col - 3, clue.tile3)):
+			if (_removeFromField(col - 1, clue.tile1)): changed = true
+		if (!_tilePresent(col + 3, clue.tile1)):
+			if (_removeFromField(col + 1, clue.tile3)): changed = true
+		if (!_tilePresent(col - 3, clue.tile1)):
+			if (_removeFromField(col - 1, clue.tile3)): changed = true		
+	for col in range(6):
+		if !(_tilePresent(col + 2, clue.tile3) || _tilePresent(col - 2, clue.tile3)):
+			if (_removeFromField(col + 1, clue.tile1)): changed = true
+		if !(_tilePresent(col + 2, clue.tile1) || _tilePresent(col - 2, clue.tile1)):
+			if (_removeFromField(col + 1, clue.tile3)): changed = true
+	return changed		
+
+func _checkClueNotCol(clue:Clue):
+	var changed = false
+	if (clue.tile1 in solved) && (clue.tile2 in solved):
+		clue.enabled = false
+		return false
+	if (clue.tile1 in solved):
+		var pos = _findInSolution(clue.tile1)
+		if (_removeFromField(pos[0], clue.tile2)): changed = true 
+	if (clue.tile2 in solved):
+		var pos = _findInSolution(clue.tile2)
+		if (_removeFromField(pos[0], clue.tile1)): changed = true
+	return changed
+	
+func _checkClueNotNear(clue:Clue):
+	var changed = false
+	if (clue.tile1 in solved) && (clue.tile2 in solved):
+		clue.enabled = false
+		return false
+	if (clue.tile1 in solved):
+		var pos = _findInSolution(clue.tile1)
+		if (_removeFromField(pos[0] - 1, clue.tile2)): changed = true 
+		if (_removeFromField(pos[0] + 1, clue.tile2)): changed = true
+	if (clue.tile2 in solved):
+		var pos = _findInSolution(clue.tile2)
+		if (_removeFromField(pos[0] - 1, clue.tile1)): changed = true 
+		if (_removeFromField(pos[0] + 1, clue.tile1)): changed = true
+	return changed
+	
+func _checkClueToLeft(clue:Clue):
+	var changed = false
+	if (clue.tile1 in solved) && (clue.tile2 in solved) && (clue.tile3 in solved):
+		clue.enabled = false
+		return false
+	if (clue.tile1 in solved):
+		clue.enabled = false
+		var pos = _findInSolution(clue.tile1)
+		for col in range(0, pos[0]+1):
+			if (_removeFromField(col, clue.tile2)): changed = true
+		return changed
+	if (clue.tile2 in solved):
+		clue.enabled = false
+		var pos = _findInSolution(clue.tile2)
+		for col in range(pos[0], 6):
+			if (_removeFromField(col, clue.tile1)): changed = true
+		return changed
+	for col in range(6):
+		var has = false
+		for l in range(0, col):
+			if (_tilePresent(l, clue.tile1)): has = true
+		if (!has):
+			if (_removeFromField(col, clue.tile2)): changed = true
+		has = false
+		for r in range(col + 1 , 6):
+			if (_tilePresent(r, clue.tile2)): has = true
+		if (!has):
+			if (_removeFromField(col, clue.tile1)): changed = true
+	return changed
+	
+func _checkClueBetween(clue:Clue):
+	var changed = false
+	if (clue.tile1 in solved) && (clue.tile2 in solved) && (clue.tile3 in solved):
+		clue.enabled = false
+		return false
+	for col in range(6):
+		if !(_tilePresent(col - 2, clue.tile3) || _tilePresent(col + 2, clue.tile3)):
+			if (_removeFromField(col, clue.tile1)): changed = true
+		#if !(_tilePresent(col - 2, clue.tile3) || _tilePresent(col + 1, clue.tile2)):
+		#	if (_removeFromField(col, clue.tile1)): changed = true
+		#if !(_tilePresent(col + 2, clue.tile3) || _tilePresent(col - 1, clue.tile2)):
+		#	if (_removeFromField(col, clue.tile1)): changed = true
+		if !(_tilePresent(col - 1, clue.tile2) || _tilePresent(col + 1, clue.tile2)):
+			if (_removeFromField(col, clue.tile1)): changed = true	
+			if (_removeFromField(col, clue.tile3)): changed = true
+		if !(_tilePresent(col - 2, clue.tile1) || _tilePresent(col + 2, clue.tile1)):
+			if (_removeFromField(col, clue.tile3)): changed = true		
+		#if !(_tilePresent(col - 2, clue.tile1) || _tilePresent(col + 1, clue.tile2)):
+		#	if (_removeFromField(col, clue.tile3)): changed = true
+		#if !(_tilePresent(col + 2, clue.tile1) || _tilePresent(col - 1, clue.tile2)):
+		#	if (_removeFromField(col, clue.tile3)): changed = true
+		if !(_tilePresent(col - 1, clue.tile3) || _tilePresent(col + 1, clue.tile3)):
+			if (_removeFromField(col, clue.tile2)): changed = true
+		if !(_tilePresent(col - 1, clue.tile1) || _tilePresent(col + 1, clue.tile1)):
+			if (_removeFromField(col, clue.tile2)): changed = true
+		if !(_tilePresent(col - 1, clue.tile1) || _tilePresent(col - 1, clue.tile3)):
+			if (_removeFromField(col, clue.tile2)): changed = true
+		if !(_tilePresent(col + 1, clue.tile1) || _tilePresent(col + 1, clue.tile3)):
+			if (_removeFromField(col, clue.tile2)): changed = true	
+	return changed
+	
+func _checkClueNear(clue:Clue):
+	var changed = false
+	if (clue.tile1 in solved) && (clue.tile2 in solved):
+		clue.enabled = false
+		return false
+	if (clue.tile1 in solved):
+		var pos = _findInSolution(clue.tile1)
+		var col1 = pos[0]
+		for col in range(6):
+			if (col != col1 + 1  || col != col1 - 1):
+				_removeFromField(col, clue.tile2)
+		clue.enabled = false		
+		return true
+	if (clue.tile2 in solved):
+		var pos = _findInSolution(clue.tile2)
+		var col1 = pos[0]
+		for col in range(6):
+			if (col != col1 + 1  || col != col1 - 1):
+				_removeFromField(col, clue.tile1)
+		clue.enabled = false
+		return true
+	for col in range(6):
+		if !(_tilePresent(col - 1, clue.tile1) || _tilePresent(col + 1, clue.tile1)):
+			if _removeFromField(col, clue.tile2) : changed = true
+		if !(_tilePresent(col - 1, clue.tile2) || _tilePresent(col + 1, clue.tile2)):
+			if _removeFromField(col, clue.tile1): changed = true
+	return changed
+	
+func _checkClueCol(clue:Clue):
+	var changed = false
+	if (clue.tile1 in solved) && (clue.tile2 in solved): 
+		clue.enabled = false
+		return false
+	if (clue.tile1 in solved):
+		var pos = _findInSolution(clue.tile2)
+		_selectTile(pos[0], pos[1], clue.tile2)
+		return true
+	if (clue.tile2 in solved):
+		var pos = _findInSolution(clue.tile1)
+		_selectTile(pos[0], pos[1], clue.tile1)
+		return true
+	for col in range(6):
+		if !_tilePresent(col, clue.tile1):
+			if _removeFromField(col, clue.tile2): changed = true
+		if !_tilePresent(col, clue.tile2):
+			if _removeFromField(col, clue.tile1): changed = true
+	return changed	
 
 func _createClue():
+	if (ingame.size() == 0): return
 	var clue = Clue.new()
 	clue.type = _getClueType()
 	var tile = ingame[rng.randi() % ingame.size()]
@@ -146,34 +371,46 @@ func _createClue():
 		arr.shuffle()
 		clue.tile1 = arr[0]
 		clue.tile2 = solution[col2][row2]
-		clue.tile3 = arr[3]
+		clue.tile3 = arr[1]
 	elif clue.type == GL.CLUETYPE.SELECTED:
 		clue.tile1 = tile
-	print(clue.type)
-	clues[clue.type].append(clue)
-		
+	clues[clue.type].append(clue)	
+#	var new = true	
+#	for old in clues[clue.type]:
+#		if (old.tile1 == clue.tile1 && old.tile2 == clue.tile2 && old.tile3 == clue.tile3):
+#			new = false
+#			break
+#		if (clue.type != GL.CLUETYPE.NOTBETWEEN && clue.type != GL.CLUETYPE.BETWEEN && clue.type != GL.CLUETYPE.TOLEFT):
+#			if (old.tile1 == clue.tile2 && old.tile2 == clue.tile1):
+#				new = false
+#				break
+#		if (clue.type == GL.CLUETYPE.NOTBETWEEN || clue.type == GL.CLUETYPE.BETWEEN):
+#			if (old.tile1 == clue.tile3 && old.tile2 == clue.tile2 && old.tile3 == clue.tile1):
+#				new = false
+#				break
+#	if new: clues[clue.type].append(clue)
 	
 func _getClueType():
-	var num = rng.randi_range(0, 99)
-	if (num < 15): return GL.CLUETYPE.NEAR
-	if (num < 30): return GL.CLUETYPE.COLUMN
-	if (num < 45): return GL.CLUETYPE.BETWEEN
-	if (num < 60): return GL.CLUETYPE.TOLEFT
-	if (num < 75): return GL.CLUETYPE.NOTBETWEEN
-	if (num < 90): return GL.CLUETYPE.NOTCOL
-	if (num < 95): return GL.CLUETYPE.NOTNEAR
+	var num = rng.randi_range(0, 100)
+	if (num < 30): return GL.CLUETYPE.NEAR
+	elif (num < 60): return GL.CLUETYPE.COLUMN
+	elif (num < 90): return GL.CLUETYPE.BETWEEN
+	elif (num < 0): return GL.CLUETYPE.TOLEFT
+	elif (num < 0): return GL.CLUETYPE.NOTBETWEEN
+	elif (num < 0): return GL.CLUETYPE.NOTCOL
+	elif (num < 0): return GL.CLUETYPE.NOTNEAR
 	return GL.CLUETYPE.SELECTED
 
-func _selectTile(col, row, tile):
+func _selectTile(col, _row1, tile):
+	var row = rows.find(tile.left(1))
 	ingame.erase(tile)
+	solved.append(tile)
 	selected[col][row] = tile
 	field[col][row] = []
-	for col in range (6):
-		for row in range(6):
-			field[col][row].erase(tile)
+	for i in range (6):
+			field[i][row].erase(tile)
 	
 func _checkLast():
-	print("check last")
 	var changed = false
 	for col in range (6):
 		for row in range(6):
@@ -183,7 +420,6 @@ func _checkLast():
 	return changed
 	
 func _checkOnly():
-	print("check only")
 	var changed = false
 	for row in range(0, 6):
 		for tile in _rowTiles(row):
@@ -193,7 +429,7 @@ func _checkOnly():
 			for col in range(6):
 				if (field[col][row].has(tile)):
 					count += 1
-					seen = col
+					seen = col			
 			if (count == 1):
 				_selectTile(seen, row, tile)
 				changed = true
@@ -207,6 +443,18 @@ func _rowTiles(row):
 
 func _isSolved():
 	return (ingame.size() == 0)
+	
+func _removeFromField(col, tile):
+	if (col < 0 || col > 5): return false
+	var row = rows.find(tile.left(1))
+	var has = field[col][row].has(tile)
+	if has:	field[col][row].erase(tile)
+	return has
+	
+func _tilePresent(col, tile):
+	if (col < 0 || col > 5): return false
+	var row = rows.find(tile.left(1))
+	return (field[col][row].has(tile) || selected[col][row] == tile)
 
 func _findInSolution(tile):
 	var row = rows.find(tile.left(1))

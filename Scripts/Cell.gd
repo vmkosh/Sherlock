@@ -6,8 +6,8 @@ extends Area2D
 # var b = "text"
 var col = null
 var row = null
-var tile = preload("res://Classes/Tile.tscn")
-var bigCell = preload("res://Classes/BigTile.tscn")
+const Tile = preload("res://Classes/Tile.tscn")
+const BigCell = preload("res://Classes/BigTile.tscn")
 var tiles = Array()
 
 func _init(param_col, param_row, x, y):
@@ -17,14 +17,14 @@ func _init(param_col, param_row, x, y):
 	position.y = y
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	var bc = bigCell.instance()
+	var bc = BigCell.instance()
 	EB.subscribe("tileSelected_%s" % row, self, "_on_Tile_selected")
 	bc.init(col, row)
 	bc.position.x = 32
 	bc.position.y = 16
 	add_child(bc)
 	for i in range(0,6):
-		var s = tile.instance()
+		var s = Tile.instance()
 # warning-ignore:integer_division
 		s.position = Vector2((i % 3) * 32 , (i / 3) * 32)
 		s.init(load("res://Tiles/%s/icon%d.png" % [row, i]), col, row, i)

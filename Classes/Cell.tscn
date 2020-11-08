@@ -9,7 +9,7 @@ script/source = "extends Area2D
 # var b = \"text\"
 var col = null
 var row = null
-var tile = preload(\"res://Classes/Tile.tscn\")
+const Tile = preload(\"res://Classes/Tile.tscn\")
 var tiles = Array()
 
 func _init(param_col, param_row, x, y):
@@ -21,7 +21,7 @@ func _init(param_col, param_row, x, y):
 func _ready():
 	for i in range(0,6):
 		print(i)
-		var s = tile.instance()
+		var s = Tile.instance()
 		
 		s.position = Vector2((i % 3) * 32, (i / 3) * 32)
 		s.init(load(\"res://Tiles/%s/icon%d.png\" % [row, i]), col, row, i)
